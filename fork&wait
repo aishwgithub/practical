@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+#define MAX_NUMBERS 100
+
+// Function to perform bubble sort
+void bubble_sort(int arr[], int n) {
+    for (int i = 0; i < n-1; i++) {
+        for (int j = 0; j < n-i-1; j++) {
+            if (arr[j] > arr[j+1]) {
+                int temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int numbers[MAX_NUMBERS];
+    int count;
+
+    // Accept integers to be sorted
+    printf("Enter the number of integers to sort: ");
+    scanf("%d", &count);
+    printf("Enter %d integers:\n", count);
+    for (int i = 0; i < count; i++) {
+        scanf("%d", &numbers[i]);
+    }
+
+    // Create a child process
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        // Fork failed
+        perror("Fork failed");
+        return 1;
+    } else if (pid == 0) {
+        // Child process
+        printf("Child process (PID: %d) is sorting...\n", getpid());
+        
+        // Simulate some processing time for demonstration
+        sleep(5);  // This will make the child process sleep to create an orphan
+
+        // Sorting in the child process
+        bubble_sort(numbers, count);
+        
+        printf("Child sorted array: ");
+        for (int i = 0; i < count; i++) {
+            printf("%d ", numbers[i]);
+        }
+        printf("\n");
+
+        exit(0);  // Exit child process
+    } else {
+        // Parent process
+        printf("Parent process (PID: %d) is sorting...\n", getpid());
+        
+        // Sorting in the parent process
+        bubble_sort(numbers, count);
+        
+        printf("Parent sorted array: ");
+        for (int i = 0; i < count; i++) {
+            printf("%d ", numbers[i]);
+        }
+        printf("\n");
+
+        // Demonstrate zombie state by not calling wait immediately
+        printf("Parent will wait for child to terminate...\n");
+        sleep(10);  // Sleep to keep parent alive, allowing child to become orphan
+        
+        // Now wait for the child process to finish
+        wait(NULL);
+        printf("Child process has terminated.\n");
+    }
+
+    return 0;
+}
