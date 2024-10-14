@@ -1,0 +1,76 @@
+#include <stdio.h>
+
+#define MAX 100 // Maximum number of pages
+#define FRAME_SIZE 3 // Number of frames in memory
+
+void printFrames(int frame[], int n) {
+    printf("Frames: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", frame[i]);
+    }
+    printf("\n");
+}
+
+int findLRU(int time[], int n) {
+    int minimum = time[0], pos = 0;
+    for (int i = 1; i < n; i++) {
+        if (time[i] < minimum) {
+            minimum = time[i];
+            pos = i;
+        }
+    }
+    return pos;
+}
+
+void lruPageReplacement(int pages[], int n) {
+    int frame[FRAME_SIZE], time[FRAME_SIZE], counter = 0;
+    int pageFaults = 0;
+
+    // Initialize frames
+    for (int i = 0; i < FRAME_SIZE; i++) {
+        frame[i] = -1; // -1 indicates empty frame
+    }
+
+    for (int i = 0; i < n; i++) {
+        int page = pages[i];
+        int found = 0;
+
+        // Check if page is already in the frame
+        for (int j = 0; j < FRAME_SIZE; j++) {
+            if (frame[j] == page) {
+                found = 1;
+                time[j] = counter++; // Update time
+                break;
+            }
+        }
+
+        // Page fault occurs
+        if (!found) {
+            int lru_index = findLRU(time, FRAME_SIZE);
+            frame[lru_index] = page; // Replace the LRU page
+            time[lru_index] = counter++; // Update time
+            pageFaults++;
+        }
+
+        // Print current frames after each page reference
+        printFrames(frame, FRAME_SIZE);
+    }
+
+    printf("Total Page Faults: %d\n", pageFaults);
+}
+
+int main() {
+    int pages[MAX], n;
+
+    printf("Enter the number of pages: ");
+    scanf("%d", &n);
+
+    printf("Enter the page numbers: ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &pages[i]);
+    }
+
+    lruPageReplacement(pages, n);
+
+    return 0;
+}
