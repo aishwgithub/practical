@@ -11,6 +11,7 @@ void printFrames(int frame[], int n) {
     printf("\n");
 }
 
+
 int findLRU(int time[], int n) {
     int minimum = time[0], pos = 0;
     for (int i = 1; i < n; i++) {
