@@ -33,7 +33,7 @@ void FCFS(int pages[], int n, int frames) {
 }
 
 int main() {
-    int pages[] = {1, 3, 0, 3, 5, 0, 3};
+    int pages[] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 3};
     int n = sizeof(pages) / sizeof(pages[0]);
     int frames = 3;
 
