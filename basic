@@ -1,0 +1,47 @@
+echo "hello"
+
+ls
+ls -a
+ls -l
+
+mkdir folder_name
+
+touch file_name
+
+cat > file_by_cat
+cat file1 > file2
+cat file_to_read
+
+cp -i file1 file2
+
+mv old_name new_name
+mv file /location/to/move
+
+read var
+echo $var
+
+grep "word_to_search" file_name
+
+sed 's/amazing/lol/' test2
+sed '1d' test2
+
+for i in {1..5};
+do echo $i;
+done
+
+count=1
+while [ $count -le 5 ];
+do echo $count
+count=$((count + 1))
+done
+
+a=2
+b=9
+sum=$((a+b))
+echo $sum
+
+if  [[ $a > $b ]];
+then echo "lol'
+else
+echo 'again lol'
+fi
