@@ -32,7 +32,7 @@ int main() {
     pid = fork();  // Create child process
 
     if (pid == 0) {  // Child process
-        printf("Child process sorting using Bubble Sort.\n");
+        printf("Child process sorting.\n");
         bubble_sort(arr, n);
         printf("Sorted array in child: ");
         for (i = 0; i < n; i++) {
@@ -44,7 +44,7 @@ int main() {
     else if (pid > 0) {  // Parent process
         wait(NULL);  // Parent waits for child to finish
         printf("Parent process finished waiting.\n");
-        printf("Parent process sorting using Bubble Sort.\n");
+        printf("Parent process sorting .\n");
         bubble_sort(arr, n);
         printf("Sorted array in parent: ");
         for (i = 0; i < n; i++) {
