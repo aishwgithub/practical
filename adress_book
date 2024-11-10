@@ -1,0 +1,83 @@
+#!/bin/bash
+
+FILENAME="address_book.txt"
+
+# Function to create an address book (clear the file)
+create_address_book() {
+    > "$FILENAME"
+    echo "Address book created."
+}
+
+# Function to view the address book
+view_address_book() {
+    if [ ! -s "$FILENAME" ]; then
+        echo "Address book is empty."
+    else
+        cat "$FILENAME"
+    fi
+}
+
+# Function to insert a new record
+insert_record() {
+    echo -n "Enter Name: "
+    read name
+    echo -n "Enter Phone: "
+    read phone
+    echo "$name : $phone" >> "$FILENAME"
+    echo "Record added."
+}
+
+# Function to delete a record by name
+delete_record() {
+    echo -n "Enter Name to delete: "
+    read name
+    if grep -q "^$name :" "$FILENAME"; then
+        # Use `grep -v` to exclude the matching record and save back to the file
+        grep -v "^$name :" "$FILENAME" > temp.txt 
+	mv temp.txt "$FILENAME"
+        echo "Record deleted."
+    else
+        echo "Record not found."
+    fi
+}
+
+# Function to modify a record by name
+modify_record() {
+    echo -n "Enter Name to modify: "
+    read name
+    if grep -q "^$name :" "$FILENAME"; then
+        echo -n "Enter new Phone: "
+        read phone
+        # Exclude the old record and add the modified record to a temporary file
+        grep -v "^$name :" "$FILENAME" > temp.txt
+        echo "$name : $phone" >> temp.txt
+        mv temp.txt "$FILENAME"
+        echo "Record modified."
+    else
+        echo "Record not found."
+    fi
+}
+
+# Main program loop
+while true; do
+    echo "Address Book Menu:"
+    echo "a) Create address book"
+    echo "b) View address book"
+    echo "c) Insert a record"
+    echo "d) Delete a record"
+    echo "e) Modify a record"
+    echo "f) Exit"
+    echo -n "Choose an option: "
+    read option
+
+    case $option in
+        a) create_address_book ;;
+        b) view_address_book ;;
+        c) insert_record ;;
+        d) delete_record ;;
+        e) modify_record ;;
+        f) echo "Exiting..."; break ;;
+        *) echo "Invalid option, please try again." ;;
+    esac
+    echo
+done
