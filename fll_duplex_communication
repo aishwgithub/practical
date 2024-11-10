@@ -1,0 +1,82 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#define FIFO1 "pipe1"
+#define FIFO2 "pipe2"
+#define BUFFER_SIZE 1024
+
+void count_text(const char *text, int *char_count, int *word_count, int *line_count) {
+    *char_count = *word_count = *line_count = 0;
+    int in_word = 0;
+
+    for (int i = 0; text[i] != '\0'; i++) {
+        (*char_count)++;
+        if (text[i] == ' ' || text[i] == '\n') {
+            if (in_word) {
+                (*word_count)++;
+                in_word = 0;
+            }
+        } else {
+            in_word = 1;
+        }
+        if (text[i] == '\n') (*line_count)++;
+    }
+    if (in_word) (*word_count)++;
+}
+
+int main() {
+    mkfifo(FIFO1, 0666);  // Create FIFO1 for writer->reader
+    mkfifo(FIFO2, 0666);  // Create FIFO2 for reader->writer
+
+    if (fork() == 0) {
+        // Process 2: Reader
+        int fd1 = open(FIFO1, O_RDONLY);
+        int fd2 = open(FIFO2, O_WRONLY);
+        char buffer[BUFFER_SIZE];
+        int char_count, word_count, line_count;
+
+        // Read sentence from FIFO1
+        read(fd1, buffer, BUFFER_SIZE);
+        count_text(buffer, &char_count, &word_count, &line_count);
+
+        // Write results to file
+        FILE *file = fopen("output.txt", "w");
+        fprintf(file, "Characters: %d\nWords: %d\nLines: %d\n", char_count, word_count, line_count);
+        fclose(file);
+
+        // Read from file and send results back via FIFO2
+        file = fopen("output.txt", "r");
+        fread(buffer, sizeof(char), BUFFER_SIZE, file);
+        write(fd2, buffer, strlen(buffer) + 1);
+        fclose(file);
+
+        close(fd1);
+        close(fd2);
+        exit(0);
+    } else {
+        // Process 1: Writer
+        int fd1 = open(FIFO1, O_WRONLY);
+        int fd2 = open(FIFO2, O_RDONLY);
+        char buffer[BUFFER_SIZE];
+
+        // Get input from user and send it to FIFO1
+        printf("Enter a sentence: ");
+        fgets(buffer, BUFFER_SIZE, stdin);
+        write(fd1, buffer, strlen(buffer) + 1);
+
+        // Read results from FIFO2 and display
+        read(fd2, buffer, BUFFER_SIZE);
+        printf("Output from Process 2:\n%s\n", buffer);
+
+        close(fd1);
+        close(fd2);
+        unlink(FIFO1);
+        unlink(FIFO2);
+    }
+    return 0;
+}
