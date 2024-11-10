@@ -1,0 +1,90 @@
+//server
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SHM_KEY 12345
+#define SHM_SIZE 1024
+
+int main() {
+    int shmid;
+    char *shared_memory;
+
+    // Create a shared memory segment
+    shmid = shmget(SHM_KEY, SHM_SIZE, IPC_CREAT | 0666);
+    if (shmid < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    // Attach to the shared memory
+    shared_memory = (char *)shmat(shmid, NULL, 0);
+    if (shared_memory == (char *)-1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    // Write a message to the shared memory
+    strcpy(shared_memory, "Hello from the server process!");
+
+    printf("Server: Message written to shared memory.\n");
+
+    // Wait for client to read the message
+    printf("Server: Waiting for client to read the message...\n");
+    sleep(10);  // Give some time for the client to read the message
+
+    // Detach and remove the shared memory segment
+    shmdt(shared_memory);
+    shmctl(shmid, IPC_RMID, NULL);
+
+    printf("Server: Shared memory removed.\n");
+
+    return 0;
+}
+
+
+
+//client
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SHM_KEY 12345
+#define SHM_SIZE 1024
+
+int main() {
+    int shmid;
+    char *shared_memory;
+
+    // Locate the shared memory segment
+    shmid = shmget(SHM_KEY, SHM_SIZE, 0666);
+    if (shmid < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    // Attach to the shared memory
+    shared_memory = (char *)shmat(shmid, NULL, 0);
+    if (shared_memory == (char *)-1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    // Read the message from the shared memory
+    printf("Client: Message from server: %s\n", shared_memory);
+
+    // Detach from the shared memory
+    shmdt(shared_memory);
+
+    return 0;
+}
+*****run*******
+gcc server.c -o server
+gcc client.c -o client
+
+./server
+./client
