@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void SCAN(int requests[], int n, int head, int diskSize) {
+    int totalSeekTime = 0;
+
+    // Sort requests in ascending order
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (requests[i] > requests[j]) {
+                int temp = requests[i];
+                requests[i] = requests[j];
+                requests[j] = temp;
+            }
+        }
+    }
+
+    // Find the index where the head would fit in sorted requests
+    int index = 0;
+    while (index < n && requests[index] < head) {
+        index++;
+    }
+
+    // Move towards the end of the disk
+    for (int i = index; i < n; i++) {
+        totalSeekTime += abs(head - requests[i]);
+        head = requests[i];
+    }
+
+    // Move to the end of the disk
+    totalSeekTime += abs(head - (diskSize - 1));
+    head = diskSize - 1;
+
+    // Now, reverse and move towards the start of the disk
+    for (int i = index - 1; i >= 0; i--) {
+        totalSeekTime += abs(head - requests[i]);
+        head = requests[i];
+    }
+
+    printf("Total Seek Time (SCAN): %d\n", totalSeekTime);
+}
+
+int main() {
+    int n, head, diskSize;
+
+    printf("Enter the number of requests: ");
+    scanf("%d", &n);
+
+    int requests[n];
+    printf("Enter the request queue: ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    printf("Enter the initial head position: ");
+    scanf("%d", &head);
+
+    printf("Enter the disk size: ");
+    scanf("%d", &diskSize);
+
+    SCAN(requests, n, head, diskSize);
+    return 0;
+}
