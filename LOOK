@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Function to sort the requests in ascending order (Bubble Sort)
+void sortRequests(int requests[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (requests[j] > requests[j + 1]) {
+                int temp = requests[j];
+                requests[j] = requests[j + 1];
+                requests[j + 1] = temp;
+            }
+        }
+    }
+}
+
+void C_LOOK(int requests[], int n, int head) {
+    int totalSeekTime = 0;
+
+    // Sort the request queue
+    sortRequests(requests, n);
+
+    // Find the index where the head is located or should start moving
+    int i;
+    for (i = 0; i < n; i++) {
+        if (requests[i] >= head) {
+            break;
+        }
+    }
+
+    // Move towards the right (higher values)
+    for (int j = i; j < n; j++) {
+        totalSeekTime += abs(head - requests[j]);
+        head = requests[j];
+    }
+
+    // After reaching the highest request, jump to the lowest request
+    totalSeekTime += abs(head - requests[i]);
+    head = requests[i];
+
+    // Move back towards the left (lower values)
+    for (int j = i; j >=0; j--) {
+        totalSeekTime += abs(head - requests[j]);
+        head = requests[j];
+    }
+
+    printf("Total Seek Time (C-LOOK): %d\n", totalSeekTime);
+}
+
+int main() {
+    int n, head;
+
+    // Taking input for the number of requests
+    printf("Enter the number of requests: ");
+    scanf("%d", &n);
+
+    int requests[n];
+    
+    // Taking input for the request queue
+    printf("Enter the request queue: ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    // Taking input for the initial head position
+    printf("Enter the initial head position: ");
+    scanf("%d", &head);
+
+    // Call the C-LOOK algorithm to calculate the total seek time
+    C_LOOK(requests, n, head);
+    return 0;
+}
