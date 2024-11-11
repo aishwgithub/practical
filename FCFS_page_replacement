@@ -1,0 +1,116 @@
+#include <stdio.h>
+
+void FCFS(int pages[], int n, int frames) {
+    int frame[frames], j = 0, page_faults = 0;
+
+    for (int i = 0; i < frames; i++) {
+        frame[i] = -1; // Initialize all frame slots as empty
+    }
+
+    for (int i = 0; i < n; i++) {
+        int found = 0;
+        for (int k = 0; k < frames; k++) {
+            if (frame[k] == pages[i]) {
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found) {
+            frame[j] = pages[i]; // Replace oldest page
+            j = (j + 1) % frames; // Move to next frame slot
+            page_faults++;
+        }
+
+        printf("Frame: ");
+        for (int k = 0; k < frames; k++) {
+            printf("%d ", frame[k]);
+        }
+        printf("\n");
+    }
+
+    printf("Total Page Faults (FCFS): %d\n", page_faults);
+}
+
+int main() {
+    int pages[] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 3};
+    int n = sizeof(pages) / sizeof(pages[0]);
+    int frames = 3;
+
+    FCFS(pages, n, frames);
+    return 0;
+}
+
+------------------------------------------------------------------------------------or-----------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+#include <stdio.h>
+
+void FCFS(int pages[], int n, int frames) {
+    int frame[frames], j = 0, page_faults = 0;
+
+    // Initialize all frame slots as empty (set to -1)
+    for (int i = 0; i < frames; i++) {
+        frame[i] = -1;
+    }
+
+    // Process each page in the reference string
+    for (int i = 0; i < n; i++) {
+        int found = 0;
+
+        // Check if the page is already in one of the frames
+        for (int k = 0; k < frames; k++) {
+            if (frame[k] == pages[i]) {
+                found = 1;  // Page found in a frame
+                break;
+            }
+        }
+
+        // If the page is not found, replace the oldest page
+        if (!found) {
+            frame[j] = pages[i]; // Replace the oldest page
+            j = (j + 1) % frames; // Move to the next frame slot
+            page_faults++; // Increment page fault count
+        }
+
+        // Print the current page frames
+        printf("Frame: ");
+        for (int k = 0; k < frames; k++) {
+            if (frame[k] == -1) {
+                printf("- "); // Empty slot
+            } else {
+                printf("%d ", frame[k]); // Display page number
+            }
+        }
+        printf("\n");
+    }
+
+    // Print total page faults
+    printf("Total Page Faults (FCFS): %d\n", page_faults);
+}
+
+int main() {
+    int n, frames;
+
+    // Get the number of page references from the user
+    printf("Enter the number of page references: ");
+    scanf("%d", &n);
+
+    int pages[n];
+
+    // Get the page reference string from the user
+    printf("Enter the page reference string (space-separated): ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &pages[i]);
+    }
+
+    // Get the frame size from the user
+    printf("Enter the number of frames: ");
+    scanf("%d", &frames);
+
+    // Perform the FCFS page replacement algorithm
+    FCFS(pages, n, frames);
+
+    return 0;
+}
