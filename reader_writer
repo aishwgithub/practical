@@ -1,74 +1,69 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <unistd.h>
+#include <stdio.h>
 
-#define BUFFER_SIZE 5
+sem_t write_lock;                    // Semaphore to control access to the resource
+pthread_mutex_t reader_count_lock;    // Mutex to control access to reader count
+int shared_data = 1;                  // Shared resource
+int active_readers = 0;               // Number of active readers
 
-int buffer[BUFFER_SIZE];
-int count = 0;  // Tracks items in the buffer
+void* writer(void* writer_id) {
+    int id = (int)writer_id;        // Properly cast writer_id
 
-pthread_mutex_t mutex;  // Mutex to protect buffer access
-sem_t empty;  // Semaphore to track empty slots
-sem_t full;   // Semaphore to track filled slots
+    sem_wait(&write_lock);            // Wait for access to resource
+    shared_data = shared_data * 2;    // Modify resource
+    printf("Writer %d modified shared_data to %d\n", id, shared_data);
 
-void* producer(void* arg) {
-    int item;
-    for (int i = 0; i < 10; i++) {
-        item =i+1;  // Produce a random item
-
-        sem_wait(&empty);  // Wait if buffer is full
-        pthread_mutex_lock(&mutex);  // Lock mutex to access buffer
-
-        buffer[count++] = item;  // Add item to the buffer
-        printf("Produced: %d\n", item);
-
-        pthread_mutex_unlock(&mutex);  // Unlock mutex
-        sem_post(&full);  // Signal that buffer has a new item
-
-        sleep(1);  // Simulate time for producing item
-    }
+    sem_post(&write_lock);            // Release access to resource
     return NULL;
 }
 
-void* consumer(void* arg) {
-    int item;
-    for (int i = 0; i < 10; i++) {
-        sem_wait(&full);  // Wait if buffer is empty
-        pthread_mutex_lock(&mutex);  // Lock mutex to access buffer
+void* reader(void* reader_id) {
+    int id = (int)reader_id;        // Properly cast reader_id
 
-        item = buffer[--count];  // Remove item from buffer
-        printf("Consumed: %d\n", item);
-
-        pthread_mutex_unlock(&mutex);  // Unlock mutex
-        sem_post(&empty);  // Signal that buffer has a new empty slot
-
-        sleep(1);  // Simulate time for consuming item
+    pthread_mutex_lock(&reader_count_lock);     // Lock before modifying reader count
+    active_readers++;
+    if (active_readers == 1) {
+        sem_wait(&write_lock);        // First reader locks the resource
     }
+    pthread_mutex_unlock(&reader_count_lock);   // Unlock after updating reader count
+
+    printf("Reader %d read shared_data as %d\n", id, shared_data);  // Read resource
+
+
+    pthread_mutex_lock(&reader_count_lock);     // Lock before modifying reader count
+    active_readers--;
+    if (active_readers == 0) {
+        sem_post(&write_lock);        // Last reader unlocks the resource
+    }
+    pthread_mutex_unlock(&reader_count_lock);   // Unlock after updating reader count
     return NULL;
 }
 
 int main() {
-    pthread_t prod, cons;
+    pthread_t readers[5], writers[3];
+    int ids[5] = {1, 2, 3, 4, 5};     // IDs for readers and writers
 
-    // Initialize semaphores and mutex
-    sem_init(&empty, 0, BUFFER_SIZE);  // BUFFER_SIZE empty slots initially
-    sem_init(&full, 0, 0);             // No filled slots initially
-    pthread_mutex_init(&mutex, NULL);
+    pthread_mutex_init(&reader_count_lock, NULL);
+    sem_init(&write_lock, 0, 1);
 
-    // Create producer and consumer threads
-    pthread_create(&prod, NULL, producer, NULL);
-    pthread_create(&cons, NULL, consumer, NULL);
+    // Create reader and writer threads
+    for (int i = 0; i < 5; i++) {
+        pthread_create(&readers[i], NULL, reader, &ids[i]);
+    }
+    for (int i = 0; i < 3; i++) {
+        pthread_create(&writers[i], NULL, writer, &ids[i]);
+    }
 
-    // Wait for both threads to finish
-    pthread_join(prod, NULL);
-    pthread_join(cons, NULL);
+    // Wait for threads to finish
+    for (int i = 0; i < 5; i++) {
+        pthread_join(readers[i], NULL);
+    }
+    for (int i = 0; i < 3; i++) {
+        pthread_join(writers[i], NULL);
+    }
 
-    // Clean up
-    sem_destroy(&empty);
-    sem_destroy(&full);
-    pthread_mutex_destroy(&mutex);
-
+    pthread_mutex_destroy(&reader_count_lock);
+    sem_destroy(&write_lock);
     return 0;
 }
